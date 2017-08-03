@@ -1,0 +1,220 @@
+> getwd()
+[1] "C:/Users/nanchesv/Documents"
+> ls()
+ [1] "a"                   "b"                   "bp"                  "c"                  
+ [5] "data.rose"           "data_balanced_both"  "data_balanced_over"  "data_balanced_under"
+ [9] "f"                   "fac"                 "frame"               "hacide.test"        
+[13] "hacide.train"        "HairEyeColor"        "i"                   "iris"               
+[17] "l"                   "l.mean"              "L3"                  "m"                  
+[21] "moxbuller"           "mydata"              "mydf"                "myirisdata"         
+[25] "n"                   "pred.tree.both"      "pred.tree.over"      "pred.tree.rose"     
+[29] "pred.tree.under"     "pred.treeimb"        "q.dat"               "q.map"              
+[33] "q.style"             "quakes"              "r"                   "rf"                 
+[37] "ROSE.holdout"        "sp"                  "tree.both"           "tree.over"          
+[41] "tree.rose"           "tree.under"          "treeimb"             "VADeaths"           
+[45] "x"                   "y"                  
+#remove all the old variables
+> rm(list = ls())
+#Load package for ML
+> library(caret)
+Loading required package: lattice
+Loading required package: ggplot2
+#Load the Iris dataset and store it onto a variable
+> data("iris")
+> dataset <- iris
+#Split dataset into two parts, 80% to train the model and 20% for validation
+> validation_index <- createDataPartition(dataset$Species, p = 0.80, list = FALSE)
+> validation <- dataset[-validation_index,]
+> head(dataset)
+  Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+1          5.1         3.5          1.4         0.2  setosa
+2          4.9         3.0          1.4         0.2  setosa
+3          4.7         3.2          1.3         0.2  setosa
+4          4.6         3.1          1.5         0.2  setosa
+5          5.0         3.6          1.4         0.2  setosa
+6          5.4         3.9          1.7         0.4  setosa
+> head(validation)
+   Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+3           4.7         3.2          1.3         0.2  setosa
+21          5.4         3.4          1.7         0.2  setosa
+24          5.1         3.3          1.7         0.5  setosa
+29          5.2         3.4          1.4         0.2  setosa
+34          5.5         4.2          1.4         0.2  setosa
+38          4.9         3.6          1.4         0.1  setosa
+> dataset <- dataset[validation_index,]
+> dim(dataset)
+[1] 120   5
+> sapply(dataset, class)
+Sepal.Length  Sepal.Width Petal.Length  Petal.Width      Species 
+   "numeric"    "numeric"    "numeric"    "numeric"     "factor" 
+> head(dataset)
+  Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+1          5.1         3.5          1.4         0.2  setosa
+2          4.9         3.0          1.4         0.2  setosa
+4          4.6         3.1          1.5         0.2  setosa
+5          5.0         3.6          1.4         0.2  setosa
+6          5.4         3.9          1.7         0.4  setosa
+7          4.6         3.4          1.4         0.3  setosa
+> levels(dataset$Species)
+[1] "setosa"     "versicolor" "virginica" 
+> percentage <- prop.table(table(dataset$Species)) * 100
+> cbind(freq = table(dataset$Species), percentage = percentage)
+           freq percentage
+setosa       40   33.33333
+versicolor   40   33.33333
+virginica    40   33.33333
+#Summarize the dataset
+> summary(dataset)
+  Sepal.Length   Sepal.Width     Petal.Length    Petal.Width          Species  
+ Min.   :4.30   Min.   :2.000   Min.   :1.000   Min.   :0.100   setosa    :40  
+ 1st Qu.:5.10   1st Qu.:2.800   1st Qu.:1.600   1st Qu.:0.300   versicolor:40  
+ Median :5.80   Median :3.000   Median :4.350   Median :1.300   virginica :40  
+ Mean   :5.84   Mean   :3.049   Mean   :3.752   Mean   :1.192                  
+ 3rd Qu.:6.40   3rd Qu.:3.325   3rd Qu.:5.100   3rd Qu.:1.800                  
+ Max.   :7.90   Max.   :4.400   Max.   :6.900   Max.   :2.500                  
+> x <- dataset[,1:4]
+> head(x)
+  Sepal.Length Sepal.Width Petal.Length Petal.Width
+1          5.1         3.5          1.4         0.2
+2          4.9         3.0          1.4         0.2
+4          4.6         3.1          1.5         0.2
+5          5.0         3.6          1.4         0.2
+6          5.4         3.9          1.7         0.4
+7          4.6         3.4          1.4         0.3
+> y <- dataset[,5]
+> head(y)
+[1] setosa setosa setosa setosa setosa setosa
+Levels: setosa versicolor virginica
+> par(mfrow =c(1,4))
+> for(i in 1:4) {boxplot(x[,i], main = names(iris)[i])}
+> plot(y)
+
+#Univariate plots to better understand each attribute.
+#Multivariate plots to better understand the relationships between attributes.
+> featurePlot(x=x, y= y, plot = "ellipse")
+> featurePlot(x=x, y= y, plot = "box")
+> scales <- list(x = list(relation = "free"), y = (relation = "free"))
+> featurePlot(x = x, y = y, plot = "density", scales = scales
+
+#10-fold cross validation
+
+> control <- trainControl(method = "cv", number = 10)
+> metric <- "Accuracy"
+
+
+#Evaluate 5 different types of algorithms
+
+# 1. Linear Discriminant Analysis (LDA)
+# 2. Classification and Regression Trees (CART).
+# 3. k-Nearest Neighbors (kNN).
+# 4. Support Vector Machines (SVM) with a linear kernel.
+# 5. Random Forest (RF)
+
+# Simple Linear - LDA, non-linear - CART, KNN; Complex non linear - SVM, RF
+> set.seed(7)
+> fit.lda <- train(Species~., data = dataset, method = "lda", metric = metric, trControl = trControl)
+Loading required package: MASS
+Error in train.default(x, y, weights = w, ...) : 
+  object 'trControl' not found
+> fit.lda <- train(Species~., data = dataset, method = "lda", metric = metric, trControl = control)
+> set.seed(7)
+> fit.cart <- train(Species~., data = dataset, method = "rpart", metric = metric, trControl = control)
+Loading required package: rpart
+> set.seed(7)
+> fit.knn <- train(Species~., data = dataset, method = "knn", metric = metric, trControl = control)
+> set.seed(7)
+> fit.svm <- train(Species~., data = dataset, method="svmRadial", metric = metric, trControl = control )
+Loading required package: kernlab
+
+Attaching package: ‘kernlab’
+
+The following object is masked from ‘package:ggplot2’:
+
+    alpha
+
+> set.seed(7)
+> fit.rf <- train(Species~., data = dataset, method = "rf", metric = metric, trControl = control)
+Loading required package: randomForest
+randomForest 4.6-12
+Type rfNews() to see new features/changes/bug fixes.
+
+Attaching package: ‘randomForest’
+
+The following object is masked from ‘package:ggplot2’:
+
+    margin
+
+> results <- resamples(list(lda = fit.lda, cart = fit.cart, knn = fit.knn, svm = fit.svm, rf = fit.rf))
+> summary(results)
+
+Call:
+summary.resamples(object = results)
+
+Models: lda, cart, knn, svm, rf 
+Number of resamples: 10 
+
+Accuracy 
+          Min.   1st Qu. Median      Mean 3rd Qu. Max. NA's
+lda  0.9166667 1.0000000      1 0.9833333       1    1    0
+cart 0.8333333 1.0000000      1 0.9750000       1    1    0
+knn  0.9166667 1.0000000      1 0.9916667       1    1    0
+svm  0.9166667 0.9375000      1 0.9750000       1    1    0
+rf   0.8333333 0.9166667      1 0.9583333       1    1    0
+
+Kappa 
+      Min. 1st Qu. Median   Mean 3rd Qu. Max. NA's
+lda  0.875 1.00000      1 0.9750       1    1    0
+cart 0.750 1.00000      1 0.9625       1    1    0
+knn  0.875 1.00000      1 0.9875       1    1    0
+svm  0.875 0.90625      1 0.9625       1    1    0
+rf   0.750 0.87500      1 0.9375       1    1    0
+
+> dotplot(results)
+#The LDA was the most accurate model
+
+> print(fit.lda)
+Linear Discriminant Analysis 
+
+120 samples
+  4 predictor
+  3 classes: 'setosa', 'versicolor', 'virginica' 
+
+No pre-processing
+Resampling: Cross-Validated (10 fold) 
+Summary of sample sizes: 108, 108, 108, 108, 108, 108, ... 
+Resampling results:
+
+  Accuracy   Kappa
+  0.9833333  0.975
+
+> predictions <- predict(fit.lda, validation)
+> confusionMatrix(predictions, validation$Species)
+Confusion Matrix and Statistics
+
+            Reference
+Prediction   setosa versicolor virginica
+  setosa         10          0         0
+  versicolor      0          9         0
+  virginica       0          1        10
+
+Overall Statistics
+                                          
+               Accuracy : 0.9667          
+                 95% CI : (0.8278, 0.9992)
+    No Information Rate : 0.3333          
+    P-Value [Acc > NIR] : 2.963e-13       
+                                          
+                  Kappa : 0.95            
+ Mcnemar's Test P-Value : NA              
+
+Statistics by Class:
+
+                     Class: setosa Class: versicolor Class: virginica
+Sensitivity                 1.0000            0.9000           1.0000
+Specificity                 1.0000            1.0000           0.9500
+Pos Pred Value              1.0000            1.0000           0.9091
+Neg Pred Value              1.0000            0.9524           1.0000
+Prevalence                  0.3333            0.3333           0.3333
+Detection Rate              0.3333            0.3000           0.3333
+Detection Prevalence        0.3333            0.3000           0.3667
+Balanced Accuracy           1.0000            0.9500           0.9750
